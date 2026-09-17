@@ -26,6 +26,7 @@
     --accent-ink:#4A6BC9;
     --nice:#7BC49A;
     --shadow:0 2px 10px rgba(80,100,160,.08);
+    --g0:#EDF1F9; --g1:#C9D8F8; --g2:#A5BFF2; --g3:#85A5EC; --g4:#6C8DE8;
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -40,17 +41,20 @@
       --accent-ink:#B4C6F7;
       --nice:#7BC49A;
       --shadow:0 2px 10px rgba(0,0,0,.25);
+      --g0:#1B2338; --g1:#2F3D66; --g2:#425489; --g3:#5B72B8; --g4:#8AA5F0;
     }
   }
   :root[data-theme="light"]{
     --bg:#EFF3FA; --bg-deep:#E4EAF6; --card:#FFFFFF; --ink:#39445F; --sub:#8B94AD;
     --line:#E3E8F2; --accent:#6C8DE8; --accent-soft:#E3EAFB; --accent-ink:#4A6BC9;
     --nice:#7BC49A; --shadow:0 2px 10px rgba(80,100,160,.08);
+    --g0:#EDF1F9; --g1:#C9D8F8; --g2:#A5BFF2; --g3:#85A5EC; --g4:#6C8DE8;
   }
   :root[data-theme="dark"]{
     --bg:#151B2E; --bg-deep:#111627; --card:#202942; --ink:#E7EBF7; --sub:#9AA5C4;
     --line:#2E3A5C; --accent:#8AA5F0; --accent-soft:#2C3A61; --accent-ink:#B4C6F7;
     --nice:#7BC49A; --shadow:0 2px 10px rgba(0,0,0,.25);
+    --g0:#1B2338; --g1:#2F3D66; --g2:#425489; --g3:#5B72B8; --g4:#8AA5F0;
   }
 
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -178,7 +182,7 @@
     width:44px; height:44px; border-radius:14px; border:none; cursor:pointer;
     background:var(--card); box-shadow:var(--shadow); color:var(--ink); font-size:18px;
   }
-  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
   .cal-wd{ text-align:center; font-size:12px; font-weight:700; color:var(--sub); padding:4px 0; }
   .cal-wd.sun{ color:#D98A8A; } .cal-wd.sat{ color:var(--accent); }
   .cal-cell{
@@ -202,6 +206,47 @@
   }
   .cal-summary .num{ font-size:24px; font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
   .cal-summary .lbl{ font-size:12px; color:var(--sub); font-weight:600; }
+
+  /* ---------- ぬり絵グリッド（習慣トラッカー） ---------- */
+  .grid-wrap{
+    background:var(--card); border-radius:20px; box-shadow:var(--shadow);
+    padding:14px 0; margin-top:12px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+  }
+  .hgrid{ display:grid; gap:2px; width:max-content; min-width:100%; padding-right:14px; align-items:center; }
+  .hg-name{
+    position:sticky; left:0; z-index:1; background:var(--card);
+    width:86px; padding:0 6px 0 12px; display:flex; align-items:center; gap:4px;
+    font-size:11px; font-weight:700; white-space:nowrap; height:16px;
+  }
+  .hg-name .em{ flex:none; width:15px; text-align:center; }
+  .hg-name .nm{ overflow:hidden; text-overflow:ellipsis; }
+  .hg-num{
+    font-size:9px; color:var(--sub); text-align:center; font-weight:600;
+    font-variant-numeric:tabular-nums; line-height:1.4;
+  }
+  .hg-num.sun{ color:#D98A8A; } .hg-num.sat{ color:var(--accent); }
+  .hg-num.now{ color:var(--accent-ink); font-weight:800; }
+  .hg-cell{ width:var(--cell,16px); height:var(--cell,16px); border-radius:4px; background:var(--g0); }
+  .hg-cell.l1{ background:var(--g1); } .hg-cell.l2{ background:var(--g2); }
+  .hg-cell.l3{ background:var(--g3); } .hg-cell.l4{ background:var(--g4); }
+  .hg-cell.future{ background:transparent; box-shadow:inset 0 0 0 1px var(--line); }
+  .hg-legend{
+    display:flex; align-items:center; gap:5px; justify-content:flex-end;
+    font-size:10px; color:var(--sub); font-weight:600; padding:10px 14px 0;
+  }
+  .hg-legend .hg-cell{ width:12px; height:12px; border-radius:3px; }
+
+  /* ---------- 習慣べつの成績 ---------- */
+  .hstat{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border-radius:16px; padding:10px 14px;
+    box-shadow:var(--shadow); font-size:14px;
+  }
+  .hstat .e{ font-size:20px; }
+  .hstat .n{ flex:1; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hstat .v{ font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; font-size:13px; }
+  .hstat .b{ font-size:11px; color:var(--sub); font-weight:600; font-variant-numeric:tabular-nums; }
+  .hstat-list{ display:flex; flex-direction:column; gap:8px; }
 
   /* ---------- 設定 ---------- */
   .set-list{ display:flex; flex-direction:column; gap:10px; }
@@ -391,7 +436,23 @@
       <div><div class="num" id="s-days"></div><div class="lbl">記録した日</div></div>
       <div><div class="num" id="s-perfect"></div><div class="lbl">全部できた日</div></div>
       <div><div class="num" id="s-rate"></div><div class="lbl">達成率</div></div>
+      <div><div class="num" id="s-happy"></div><div class="lbl">ハッピー平均</div></div>
     </div>
+
+    <div class="section-label">ぬり絵（できた日がこくなる）</div>
+    <div class="grid-wrap">
+      <div class="hgrid" id="hgrid"></div>
+      <div class="hg-legend">
+        <span>つづくほど、こく</span>
+        <span class="hg-cell"></span><span class="hg-cell l1"></span>
+        <span class="hg-cell l2"></span><span class="hg-cell l3"></span><span class="hg-cell l4"></span>
+      </div>
+    </div>
+
+    <div class="section-label">習慣べつの成績</div>
+    <div class="hstat-list" id="hstat-list"></div>
+
+    <button class="ghost-btn" id="btn-report" style="margin-top:18px">📄 この月のふりかえりをHTMLで保存</button>
   </div>
 
   <!-- ============ せってい ============ -->
@@ -743,7 +804,6 @@
     const first = new Date(calY, calM, 1);
     const daysIn = new Date(calY, calM+1, 0).getDate();
     const tk = todayKey();
-    let recorded = 0, perfect = 0, doneSum = 0, chanceSum = 0;
 
     for(let i=0;i<first.getDay();i++){
       const b = document.createElement('div'); b.className='cal-cell blank'; grid.appendChild(b);
@@ -756,12 +816,6 @@
       cell.className = 'cal-cell' + (dk===tk?' today':'') + (isFuture?' future':'');
       const total = data.habits.length;
       const done = r && r.done ? data.habits.filter(h => r.done[h.id]).length : 0;
-      const hasAny = r && (done>0 || r.mood!==null && r.mood!==undefined || r.happy!==null && r.happy!==undefined || (r.note && r.note.length) || (r.goalNote && r.goalNote.length) || r.goalResult!==null && r.goalResult!==undefined);
-      if(!isFuture && hasAny){
-        recorded++;
-        if(total>0 && done===total) perfect++;
-      }
-      if(!isFuture && total>0){ doneSum += done; chanceSum += total; }
       cell.innerHTML =
         '<div class="d">' + d + '</div>' +
         '<div class="m">' + (r && r.happy!==null && r.happy!==undefined ? HAPPYS[r.happy] : (r && r.mood!==null && r.mood!==undefined ? MOODS[r.mood] : (total>0 && done===total && !isFuture ? '💮' : ''))) + '</div>' +
@@ -773,9 +827,103 @@
       }
       grid.appendChild(cell);
     }
-    $('s-days').textContent = recorded;
-    $('s-perfect').textContent = perfect;
-    $('s-rate').textContent = chanceSum ? Math.round(doneSum/chanceSum*100) + '%' : '—';
+    const st = monthStats(calY, calM);
+    $('s-days').textContent = st.recorded;
+    $('s-perfect').textContent = st.perfect;
+    $('s-rate').textContent = st.rate === null ? '—' : st.rate + '%';
+    $('s-happy').textContent = st.happyAvg === null ? '—' : HAPPYS[st.happyAvg];
+    renderMonthExtras(st);
+  }
+
+  /* ---------- 月の集計（ぬり絵・成績・レポート共通） ---------- */
+  function monthStats(y, m){
+    const daysIn = new Date(y, m+1, 0).getDate();
+    const tk = todayKey();
+    const total = data.habits.length;
+
+    const dayInfo = [];
+    for(let d=1; d<=daysIn; d++){
+      const dt = new Date(y, m, d);
+      const dk = key(dt);
+      dayInfo.push({ d, dk, wd:dt.getDay(), future: dk > tk, today: dk === tk, r: data.records[dk] });
+    }
+    const pastDays = dayInfo.filter(x => !x.future).length;
+
+    // 習慣ごとの「ぬり具合」。月をまたいで続いているストリークは引き継ぐ
+    const rows = data.habits.map(h => {
+      let run = 0;
+      const back = new Date(y, m, 0);
+      while(run < 400){
+        const rr = data.records[key(back)];
+        if(rr && rr.done && rr.done[h.id]){ run++; back.setDate(back.getDate()-1); } else break;
+      }
+      let count = 0, best = 0;
+      const cells = dayInfo.map(di => {
+        const done = !!(di.r && di.r.done && di.r.done[h.id]);
+        if(done){ run++; count++; if(run > best) best = run; }
+        else if(!di.future){ run = 0; }
+        return { d:di.d, done, future:di.future, level: done ? (run>=8?4:run>=5?3:run>=3?2:1) : 0 };
+      });
+      return { habit:h, cells, count, best, rate: pastDays ? Math.round(count/pastDays*100) : 0 };
+    });
+
+    let recorded = 0, perfect = 0, doneSum = 0, chanceSum = 0, happySum = 0, happyN = 0;
+    const notes = [];
+    dayInfo.forEach(di => {
+      const r = di.r;
+      if(!r) return;
+      const done = r.done ? data.habits.filter(h => r.done[h.id]).length : 0;
+      const hasAny = done>0 || has(r.mood) || has(r.happy) || txt(r.note) || txt(r.goalNote) || has(r.goalResult);
+      if(!di.future){
+        if(hasAny){ recorded++; if(total>0 && done===total) perfect++; }
+        if(total>0){ doneSum += done; chanceSum += total; }
+        if(has(r.happy)){ happySum += r.happy; happyN++; }
+        if(txt(r.note) || txt(r.goal) || txt(r.goalNote) || has(r.goalResult)){
+          notes.push({ d:di.d, wd:di.wd, r, done, total });
+        }
+      }
+    });
+    function has(v){ return v !== null && v !== undefined; }
+    function txt(v){ return !!(v && v.length); }
+
+    return {
+      y, m, daysIn, dayInfo, rows, notes, total,
+      recorded, perfect,
+      rate: chanceSum ? Math.round(doneSum/chanceSum*100) : null,
+      happyAvg: happyN ? Math.round(happySum/happyN) : null
+    };
+  }
+
+  /* ---------- ぬり絵グリッド＋習慣べつの成績 ---------- */
+  function renderMonthExtras(st){
+    const g = $('hgrid');
+    // 1か月ぶんが一度に見渡せるよう、はみ出さない範囲でセルを大きくする
+    const avail = (g.parentElement.clientWidth || 520) - 86 - 14 - (st.daysIn - 1) * 2;
+    const cell = Math.max(11, Math.min(16, Math.floor(avail / st.daysIn)));
+    g.style.setProperty('--cell', cell + 'px');
+    g.style.gridTemplateColumns = '86px repeat(' + st.daysIn + ', ' + cell + 'px)';
+    let html = '<div class="hg-name"></div>';
+    st.dayInfo.forEach(di => {
+      html += '<div class="hg-num' + (di.today ? ' now' : di.wd===0 ? ' sun' : di.wd===6 ? ' sat' : '') + '">' + di.d + '</div>';
+    });
+    if(!st.rows.length){
+      html += '<div class="hg-name" style="grid-column:1/-1;color:var(--sub);font-weight:600">習慣がまだありません</div>';
+    }
+    st.rows.forEach(row => {
+      html += '<div class="hg-name"><span class="em">' + row.habit.emoji + '</span><span class="nm">' + esc(row.habit.name) + '</span></div>';
+      row.cells.forEach(c => {
+        html += '<div class="hg-cell' + (c.done ? ' l' + c.level : c.future ? ' future' : '') + '"></div>';
+      });
+    });
+    g.innerHTML = html;
+
+    $('hstat-list').innerHTML = st.rows.length
+      ? st.rows.map(r =>
+          '<div class="hstat"><span class="e">' + r.habit.emoji + '</span>' +
+          '<span class="n">' + esc(r.habit.name) + '</span>' +
+          '<span class="b">最長🔥' + r.best + '</span>' +
+          '<span class="v">' + r.count + '日 ' + r.rate + '%</span></div>').join('')
+      : '<div class="hstat" style="color:var(--sub);justify-content:center">「せってい」から習慣をふやすと、ここに成績が出ます</div>';
   }
   $('cal-prev').addEventListener('click', () => { calM--; if(calM<0){calM=11;calY--;} renderCal(); });
   $('cal-next').addEventListener('click', () => { calM++; if(calM>11){calM=0;calY++;} renderCal(); });
@@ -994,6 +1142,129 @@
     }
   });
 
+  /* ---------- 1か月のふりかえりHTMLを書き出す ---------- */
+  function buildReportHTML(st){
+    const title = st.y + '年' + (st.m+1) + '月のふりかえり';
+    const cols = 'auto repeat(' + st.daysIn + ', 16px)';
+
+    let grid = '<div class="hgn"></div>';
+    st.dayInfo.forEach(di => {
+      grid += '<div class="hgd' + (di.wd===0 ? ' sun' : di.wd===6 ? ' sat' : '') + '">' + di.d + '</div>';
+    });
+    st.rows.forEach(row => {
+      grid += '<div class="hgn"><b>' + row.habit.emoji + '</b>' + esc(row.habit.name) + '</div>';
+      row.cells.forEach(c => {
+        grid += '<div class="hgc' + (c.done ? ' l' + c.level : c.future ? ' fu' : '') + '"></div>';
+      });
+    });
+
+    const stats = [
+      ['記録した日', st.recorded + '日'],
+      ['全部できた日', st.perfect + '日'],
+      ['達成率', st.rate === null ? '—' : st.rate + '%'],
+      ['ハッピー平均', st.happyAvg === null ? '—' : HAPPYS[st.happyAvg]]
+    ].map(s => '<div class="stat"><div class="sv">' + s[1] + '</div><div class="sl">' + s[0] + '</div></div>').join('');
+
+    const habitRows = st.rows.length
+      ? st.rows.map(r =>
+          '<tr><td class="he">' + r.habit.emoji + '</td><td>' + esc(r.habit.name) + '</td>' +
+          '<td class="num">' + r.count + '日</td><td class="num">' + r.rate + '%</td>' +
+          '<td class="num">🔥' + r.best + '</td></tr>').join('')
+      : '<tr><td colspan="5" class="none">習慣の記録はありません</td></tr>';
+
+    const noteItems = st.notes.length
+      ? st.notes.map(n => {
+          const meta = [];
+          if(n.r.happy !== null && n.r.happy !== undefined) meta.push(HAPPYS[n.r.happy]);
+          if(n.r.mood !== null && n.r.mood !== undefined) meta.push(MOODS[n.r.mood]);
+          if(n.total > 0) meta.push('できた ' + n.done + '/' + n.total);
+          let body = '';
+          if(n.r.note) body += '<div class="nt">' + esc(n.r.note) + '</div>';
+          if(n.r.goal || (n.r.goalResult !== null && n.r.goalResult !== undefined) || n.r.goalNote){
+            const parts = [];
+            if(n.r.goal) parts.push('🎯 ' + esc(n.r.goal));
+            if(n.r.goalResult !== null && n.r.goalResult !== undefined) parts.push(GOALR[n.r.goalResult]);
+            if(n.r.goalNote) parts.push(esc(n.r.goalNote));
+            body += '<div class="ng">' + parts.join(' ／ ') + '</div>';
+          }
+          return '<li><div class="nd">' + (st.m+1) + '/' + n.d + '<span>(' + WDAYS[n.wd] + ')</span></div>' +
+                 '<div class="nb">' + (meta.length ? '<div class="nm">' + meta.join(' ') + '</div>' : '') + body + '</div></li>';
+        }).join('')
+      : '<li class="none">この月に書いたことばはありません</li>';
+
+    return '<!doctype html>\n<html lang="ja">\n<head>\n<meta charset="utf-8">\n' +
+'<title>ゆるログ ' + title + '</title>\n' +
+'<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+'<style>\n' +
+':root{--bg:#EFF3FA;--card:#fff;--ink:#39445F;--sub:#8B94AD;--line:#E3E8F2;--accent:#6C8DE8;--accent-ink:#4A6BC9;--soft:#E3EAFB;' +
+'--g0:#EDF1F9;--g1:#C9D8F8;--g2:#A5BFF2;--g3:#85A5EC;--g4:#6C8DE8}\n' +
+'@media(prefers-color-scheme:dark){:root{--bg:#151B2E;--card:#202942;--ink:#E7EBF7;--sub:#9AA5C4;--line:#2E3A5C;--accent:#8AA5F0;--accent-ink:#B4C6F7;--soft:#2C3A61;' +
+'--g0:#1B2338;--g1:#2F3D66;--g2:#425489;--g3:#5B72B8;--g4:#8AA5F0}}\n' +
+'*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.7;' +
+'font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","BIZ UDGothic","Yu Gothic","Segoe UI",sans-serif}\n' +
+'.wrap{max-width:760px;margin:0 auto;padding:32px 20px 64px}\n' +
+'.eyebrow{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--accent-ink)}\n' +
+'h1{font-size:30px;margin:6px 0 4px;letter-spacing:.02em}\n' +
+'.meta{font-size:12px;color:var(--sub);margin-bottom:26px}\n' +
+'h2{font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--sub);margin:34px 2px 12px}\n' +
+'.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}\n' +
+'.stat{background:var(--card);border-radius:18px;padding:16px 8px;text-align:center;box-shadow:0 2px 10px rgba(80,100,160,.08)}\n' +
+'.sv{font-size:22px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums}\n' +
+'.sl{font-size:11px;color:var(--sub);font-weight:600}\n' +
+'.card{background:var(--card);border-radius:20px;box-shadow:0 2px 10px rgba(80,100,160,.08)}\n' +
+'.scroll{overflow-x:auto;padding:16px 0}\n' +
+'.hg{display:grid;gap:2px;width:max-content;min-width:100%;padding-right:16px;align-items:center;grid-template-columns:' + cols + '}\n' +
+'.hgn{position:sticky;left:0;background:var(--card);padding:0 10px 0 16px;font-size:11px;font-weight:700;white-space:nowrap;height:16px;display:flex;align-items:center;gap:5px}\n' +
+'.hgd{font-size:9px;color:var(--sub);text-align:center;font-weight:600;font-variant-numeric:tabular-nums}\n' +
+'.hgd.sun{color:#D98A8A}.hgd.sat{color:var(--accent)}\n' +
+'.hgc{width:16px;height:16px;border-radius:4px;background:var(--g0)}\n' +
+'.hgc.l1{background:var(--g1)}.hgc.l2{background:var(--g2)}.hgc.l3{background:var(--g3)}.hgc.l4{background:var(--g4)}\n' +
+'.hgc.fu{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}\n' +
+'.legend{display:flex;gap:5px;align-items:center;justify-content:flex-end;font-size:10px;color:var(--sub);font-weight:600;padding:0 16px 14px}\n' +
+'.legend i{width:12px;height:12px;border-radius:3px;display:block}\n' +
+'table{width:100%;border-collapse:collapse;font-size:14px}\n' +
+'td{padding:11px 10px;border-bottom:1px solid var(--line)}tr:last-child td{border-bottom:none}\n' +
+'.he{width:34px;font-size:19px;padding-left:16px}\n' +
+'.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent-ink);white-space:nowrap;width:1%}\n' +
+'.num:last-child{padding-right:16px;color:var(--sub);font-size:12px}\n' +
+'.none{color:var(--sub);text-align:center;font-size:13px}\n' +
+'ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}\n' +
+'li{background:var(--card);border-radius:16px;padding:12px 16px;display:flex;gap:14px;box-shadow:0 2px 10px rgba(80,100,160,.08)}\n' +
+'.nd{flex:none;width:66px;font-weight:700;font-size:14px;color:var(--accent-ink);font-variant-numeric:tabular-nums;white-space:nowrap}\n' +
+'.nd span{color:var(--sub);font-size:11px;margin-left:3px}\n' +
+'.nb{flex:1;min-width:0}\n' +
+'.nm{font-size:13px;color:var(--sub);font-weight:600}\n' +
+'.nt{font-size:15px;margin-top:2px;overflow-wrap:break-word}\n' +
+'.ng{font-size:12px;color:var(--sub);margin-top:4px;overflow-wrap:break-word}\n' +
+'footer{margin-top:40px;font-size:11px;color:var(--sub);text-align:center;line-height:1.9}\n' +
+'@media print{body{background:#fff}.scroll{overflow:visible}li,.stat,.card{box-shadow:none;border:1px solid var(--line)}}\n' +
+'@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:24px}}\n' +
+'</style>\n</head>\n<body>\n<div class="wrap">\n' +
+'<div class="eyebrow">ゆるログ</div>\n<h1>' + title + '</h1>\n' +
+'<div class="meta">書き出し日：' + todayKey() + '</div>\n' +
+'<div class="stats">' + stats + '</div>\n' +
+'<h2>ぬり絵（つづくほど、こくなる）</h2>\n' +
+'<div class="card"><div class="scroll"><div class="hg">' + grid + '</div></div>' +
+'<div class="legend"><span>うすい</span><i style="background:var(--g1)"></i><i style="background:var(--g2)"></i>' +
+'<i style="background:var(--g3)"></i><i style="background:var(--g4)"></i><span>こい</span></div></div>\n' +
+'<h2>習慣べつの成績</h2>\n<div class="card"><table>' + habitRows + '</table></div>\n' +
+'<h2>この月のことば</h2>\n<ul>' + noteItems + '</ul>\n' +
+'<footer>ゆるログ — この記録はあなたの端末から書き出したものです。<br>ファイルを開くだけで、いつでもこの月をふりかえれます。</footer>\n' +
+'</div>\n</body>\n</html>';
+  }
+
+  $('btn-report').addEventListener('click', () => {
+    const st = monthStats(calY, calM);
+    const name = st.y + '-' + String(st.m+1).padStart(2,'0');
+    const blob = new Blob([buildReportHTML(st)], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'yurulog-' + name + '.html';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast(st.y + '年' + (st.m+1) + '月のふりかえりを保存しました！');
+  });
+
   /* ---------- タブ切り替え ---------- */
   document.querySelectorAll('.tab').forEach(t => {
     t.addEventListener('click', () => {
@@ -1014,6 +1285,13 @@
   });
   document.querySelectorAll('.overlay').forEach(o => {
     o.addEventListener('click', e => { if(e.target === o) o.classList.remove('show'); });
+  });
+
+  /* ---------- 画面幅が変わったらぬり絵を組み直す ---------- */
+  let resizeT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => { if(!$('view-cal').hidden) renderCal(); }, 200);
   });
 
   /* ---------- 日付が変わったら再描画 ---------- */
