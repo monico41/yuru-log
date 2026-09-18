@@ -1,6 +1,6 @@
 /* ゆるログ － オフラインでも開けるようにするためのファイル。
    記録データ（localStorage）には一切触りません。 */
-const CACHE = 'yurulog-shell-v2';
+const CACHE = 'yurulog-shell-v3';
 const ASSETS = [
   './',
   './index.html',

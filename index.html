@@ -201,11 +201,59 @@
   }
   .cal-cell .bar i{ display:block; height:100%; background:var(--accent); border-radius:2px; }
   .cal-summary{
-    margin-top:18px; background:var(--card); border-radius:20px; padding:16px 20px;
+    margin-top:18px; background:var(--card); border-radius:20px; padding:16px 10px;
     box-shadow:var(--shadow); display:flex; justify-content:space-around; text-align:center;
   }
   .cal-summary .num{ font-size:24px; font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
-  .cal-summary .lbl{ font-size:12px; color:var(--sub); font-weight:600; }
+  .cal-summary .lbl{ font-size:clamp(9px,2.4vw,12px); color:var(--sub); font-weight:600; white-space:nowrap; }
+
+  /* ---------- 体重 ---------- */
+  .w-card{
+    display:flex; align-items:center; gap:12px;
+    background:var(--card); border-radius:20px; padding:12px 14px; box-shadow:var(--shadow);
+  }
+  .w-step{
+    width:54px; height:54px; flex:none; border-radius:17px; border:none; cursor:pointer;
+    background:var(--bg); color:var(--accent-ink); font-size:22px; font-weight:700; font-family:inherit;
+  }
+  .w-step:active{ background:var(--accent-soft); transform:scale(.96); }
+  .w-main{ flex:1; display:flex; align-items:baseline; justify-content:center; gap:5px; }
+  .w-input{
+    width:104px; border:none; background:transparent; text-align:right; padding:0;
+    font-family:inherit; font-size:34px; font-weight:700; color:var(--ink);
+    font-variant-numeric:tabular-nums; outline:none;
+  }
+  .w-input::placeholder{ color:var(--line); }
+  .w-input:focus{ color:var(--accent-ink); }
+  .w-unit{ font-size:15px; font-weight:700; color:var(--sub); }
+  .w-delta{
+    text-align:center; font-size:13px; color:var(--sub); font-weight:600;
+    margin:9px 2px 0; min-height:19px;
+  }
+  .w-delta b{ color:var(--accent-ink); font-variant-numeric:tabular-nums; }
+
+  /* ---------- 体重グラフ ---------- */
+  .wg-card{ background:var(--card); border-radius:20px; padding:14px 6px 8px; box-shadow:var(--shadow); }
+  .wg-card svg{ display:block; width:100%; height:auto; }
+  .wg-sum{
+    display:flex; justify-content:space-around; text-align:center;
+    padding:12px 6px 6px; border-top:1px solid var(--line); margin:10px 8px 0;
+  }
+  .wg-sum .num{ font-size:18px; font-weight:700; color:var(--accent-ink); font-variant-numeric:tabular-nums; }
+  .wg-sum .lbl{ font-size:11px; color:var(--sub); font-weight:600; }
+  .wg-empty{ text-align:center; color:var(--sub); font-size:13px; padding:22px 10px; }
+
+  /* ---------- スイッチ ---------- */
+  .toggle{
+    width:52px; height:30px; flex:none; border-radius:999px; border:none; cursor:pointer;
+    background:var(--line); position:relative; transition:background .2s;
+  }
+  .toggle::after{
+    content:''; position:absolute; top:3px; left:3px; width:24px; height:24px;
+    border-radius:50%; background:#fff; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.22);
+  }
+  .toggle.on{ background:var(--accent); }
+  .toggle.on::after{ transform:translateX(22px); }
 
   /* ---------- ぬり絵グリッド（習慣トラッカー） ---------- */
   .grid-wrap{
@@ -399,6 +447,20 @@
     <div class="section-label">きょうの習慣</div>
     <div class="habits" id="habit-list"></div>
 
+    <div class="section-label" id="w-label" hidden>きょうの体重</div>
+    <div id="w-block" hidden>
+      <div class="w-card">
+        <button class="w-step" id="w-minus" aria-label="0.1kg へらす">−</button>
+        <div class="w-main">
+          <input class="w-input" id="w-input" inputmode="decimal" placeholder="--.-" maxlength="5"
+                 autocomplete="off" aria-label="きょうの体重(kg)">
+          <span class="w-unit">kg</span>
+        </div>
+        <button class="w-step" id="w-plus" aria-label="0.1kg ふやす">＋</button>
+      </div>
+      <div class="w-delta" id="w-delta"></div>
+    </div>
+
     <div class="section-label">きょうのきろく</div>
     <div class="diary">
       <div class="diary-label">ハッピー度</div>
@@ -439,6 +501,9 @@
       <div><div class="num" id="s-happy"></div><div class="lbl">ハッピー平均</div></div>
     </div>
 
+    <div class="section-label" id="wg-label" hidden>体重の推移</div>
+    <div class="wg-card" id="wg-card" hidden></div>
+
     <div class="section-label">ぬり絵（できた日がこくなる）</div>
     <div class="grid-wrap">
       <div class="hgrid" id="hgrid"></div>
@@ -461,6 +526,13 @@
     <div class="section-label">習慣リスト</div>
     <div class="set-list" id="set-list"></div>
     <button class="big-btn" id="btn-add">＋ 習慣をふやす</button>
+
+    <div class="section-label">きろくする項目</div>
+    <div class="set-item">
+      <div class="emoji">⚖️</div>
+      <div class="name">体重</div>
+      <button class="toggle" id="w-toggle" role="switch" aria-label="体重を記録する"></button>
+    </div>
 
     <div class="section-label">データ</div>
     <div id="backup-status"></div>
@@ -489,6 +561,8 @@
     <div class="moods" id="d-happys" style="justify-content:flex-start;gap:8px"></div>
     <div class="field-label">こころの天気</div>
     <div class="moods" id="d-moods" style="justify-content:flex-start;gap:8px"></div>
+    <div class="field-label" id="d-w-label" hidden>体重（kg）</div>
+    <input class="text-input" id="d-weight" inputmode="decimal" maxlength="5" placeholder="例：62.4" autocomplete="off" hidden>
     <div class="field-label">一言</div>
     <input class="text-input" id="d-note" maxlength="80" placeholder="この日の一言" autocomplete="off">
     <div class="field-label">この日の目標</div>
@@ -713,11 +787,116 @@
     if(document.activeElement !== tg){ tg.value = (data.records[tk2] && data.records[tk2].goal) || ''; }
     $('tg-count').textContent = tg.value.length + '/40';
 
+    // 体重
+    renderWeight(r);
+
     // 一言
     const note = $('note');
     if(document.activeElement !== note){ note.value = (r && r.note) || ''; }
     $('note-count').textContent = note.value.length + '/80';
   }
+
+  /* ---------- 体重 ---------- */
+  const weightOn = () => data.weightOn !== false;
+  function validWeight(v){ return typeof v === 'number' && isFinite(v) && v >= 10 && v <= 400; }
+  function fmtW(v){ return v.toFixed(1); }
+
+  // dkより前でいちばん新しい体重を返す
+  function lastWeightBefore(dk){
+    const keys = Object.keys(data.records).filter(k2 => k2 < dk && validWeight(data.records[k2].weight)).sort();
+    if(!keys.length) return null;
+    const k2 = keys[keys.length-1];
+    return { key:k2, weight: data.records[k2].weight };
+  }
+  // dkのnか日前ちょうど（なければnull）
+  function weightOn7(dk, back){
+    const [y,m,d] = dk.split('-').map(Number);
+    const t = new Date(y, m-1, d - back);
+    const r = data.records[key(t)];
+    return r && validWeight(r.weight) ? r.weight : null;
+  }
+
+  function renderWeight(r){
+    const on = weightOn();
+    $('w-label').hidden = !on;
+    $('w-block').hidden = !on;
+    if(!on) return;
+
+    const tk = todayKey();
+    const cur = r && validWeight(r.weight) ? r.weight : null;
+    const inp = $('w-input');
+    if(document.activeElement !== inp){ inp.value = cur === null ? '' : fmtW(cur); }
+    const prev = lastWeightBefore(tk);
+    inp.placeholder = prev ? fmtW(prev.weight) : '--.-';
+    renderWeightDelta();
+  }
+
+  // 入力中でも増減がすぐ出るよう、この行だけ別に描き直す
+  function renderWeightDelta(){
+    const tk = todayKey();
+    const typed = parseFloat($('w-input').value);
+    const r = data.records[tk];
+    const cur = validWeight(typed) ? typed : (r && validWeight(r.weight) ? r.weight : null);
+    const prev = lastWeightBefore(tk);
+    const bits = [];
+    if(cur === null){
+      if(prev){
+        const [, pm, pd] = prev.key.split('-').map(Number);
+        bits.push('まえは <b>' + fmtW(prev.weight) + '</b> kg（' + pm + '/' + pd + '）');
+      }else{
+        bits.push('数字をタップして入れてね');
+      }
+    }else{
+      if(prev) bits.push('まえから ' + signed(cur - prev.weight));
+      const w7 = weightOn7(tk, 7);
+      if(w7 !== null) bits.push('1週間前から ' + signed(cur - w7));
+      if(!bits.length) bits.push('はじめての記録！ここから見ていこう 🌱');
+    }
+    $('w-delta').innerHTML = bits.join('　・　');
+  }
+  function signed(d){
+    const v = Math.round(d * 10) / 10;
+    if(Math.abs(v) < 0.05) return '<b>±0.0</b> kg';
+    return '<b>' + (v > 0 ? '▲ ' : '▼ ') + fmtW(Math.abs(v)) + '</b> kg';
+  }
+
+  function setWeight(dk, v){
+    const rr = rec(dk, true);
+    if(v === null) delete rr.weight; else rr.weight = Math.round(v * 10) / 10;
+    save();
+  }
+
+  $('w-input').addEventListener('input', () => {
+    const raw = $('w-input').value.replace(/[^\d.]/g, '');
+    if(raw !== $('w-input').value) $('w-input').value = raw;
+    const v = parseFloat(raw);
+    if(raw === ''){ setWeight(todayKey(), null); }
+    else if(validWeight(v)){ setWeight(todayKey(), v); }
+    renderWeightDelta();
+  });
+  $('w-input').addEventListener('focus', () => $('w-input').select());
+  $('w-input').addEventListener('blur', () => {
+    const v = parseFloat($('w-input').value);
+    if($('w-input').value !== '' && !validWeight(v)){
+      setWeight(todayKey(), null);
+      toast('体重は 10〜400 の数字で入れてね');
+    }
+    renderToday();
+  });
+
+  function stepWeight(delta){
+    const tk = todayKey();
+    const r = data.records[tk];
+    let base = r && validWeight(r.weight) ? r.weight : null;
+    if(base === null){                       // 未入力なら前回の体重から動かす
+      const prev = lastWeightBefore(tk);
+      base = prev ? prev.weight : 60;
+    }
+    setWeight(tk, Math.min(400, Math.max(10, base + delta)));
+    renderToday();
+  }
+  $('w-minus').addEventListener('click', () => stepWeight(-0.1));
+  $('w-plus').addEventListener('click', () => stepWeight(0.1));
 
   $('note').addEventListener('input', () => {
     const rr = rec(todayKey(), true);
@@ -832,6 +1011,7 @@
     $('s-perfect').textContent = st.perfect;
     $('s-rate').textContent = st.rate === null ? '—' : st.rate + '%';
     $('s-happy').textContent = st.happyAvg === null ? '—' : HAPPYS[st.happyAvg];
+    renderWeightChart(st);
     renderMonthExtras(st);
   }
 
@@ -886,12 +1066,86 @@
     function has(v){ return v !== null && v !== undefined; }
     function txt(v){ return !!(v && v.length); }
 
+    const weights = dayInfo
+      .filter(di => !di.future && di.r && validWeight(di.r.weight))
+      .map(di => ({ d: di.d, w: di.r.weight }));
+    const ws = weights.map(p => p.w);
+
     return {
       y, m, daysIn, dayInfo, rows, notes, total,
       recorded, perfect,
       rate: chanceSum ? Math.round(doneSum/chanceSum*100) : null,
-      happyAvg: happyN ? Math.round(happySum/happyN) : null
+      happyAvg: happyN ? Math.round(happySum/happyN) : null,
+      weights,
+      wMin: ws.length ? Math.min.apply(null, ws) : null,
+      wMax: ws.length ? Math.max.apply(null, ws) : null,
+      wFirst: ws.length ? ws[0] : null,
+      wLast: ws.length ? ws[ws.length-1] : null
     };
+  }
+
+  /* ---------- 体重グラフ（SVG） ---------- */
+  function weightChartSVG(st){
+    const W = 600, H = 190, L = 42, R = 12, T = 14, B = 24;
+    const pts = st.weights;
+    let lo = st.wMin, hi = st.wMax;
+    const span = hi - lo;
+    const pad = Math.max(0.4, span * 0.25);
+    lo -= pad; hi += pad;
+    const x = d => L + (d - 1) / Math.max(1, st.daysIn - 1) * (W - L - R);
+    const y = w => T + (hi - w) / (hi - lo) * (H - T - B);
+
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="体重の推移">';
+    // 目盛り（上限・下限・まんなか）
+    [hi, (hi+lo)/2, lo].forEach((v, i) => {
+      const yy = y(v).toFixed(1);
+      s += '<line x1="' + L + '" y1="' + yy + '" x2="' + (W-R) + '" y2="' + yy +
+           '" stroke="var(--line)" stroke-width="1"' + (i===1 ? ' stroke-dasharray="3 4"' : '') + '/>';
+      s += '<text x="' + (L-7) + '" y="' + (parseFloat(yy)+4) + '" text-anchor="end" font-size="11" ' +
+           'fill="var(--sub)" font-weight="600">' + v.toFixed(1) + '</text>';
+    });
+    // 日付ラベル
+    for(let d = 1; d <= st.daysIn; d++){
+      if(d === 1 || d === st.daysIn || d % 5 === 0){
+        s += '<text x="' + x(d).toFixed(1) + '" y="' + (H-6) + '" text-anchor="middle" font-size="11" ' +
+             'fill="var(--sub)" font-weight="600">' + d + '</text>';
+      }
+    }
+    // 折れ線
+    if(pts.length > 1){
+      s += '<polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" ' +
+           'stroke-linecap="round" points="' +
+           pts.map(p => x(p.d).toFixed(1) + ',' + y(p.w).toFixed(1)).join(' ') + '"/>';
+    }
+    pts.forEach((p, i) => {
+      const last = i === pts.length - 1;
+      s += '<circle cx="' + x(p.d).toFixed(1) + '" cy="' + y(p.w).toFixed(1) + '" r="' + (last ? 5 : 3.2) +
+           '" fill="var(--accent)"' + (last ? ' stroke="var(--card)" stroke-width="2.5"' : '') + '/>';
+    });
+    return s + '</svg>';
+  }
+
+  function renderWeightChart(st){
+    const on = weightOn();
+    $('wg-label').hidden = !on;
+    $('wg-card').hidden = !on;
+    if(!on) return;
+    if(!st.weights.length){
+      $('wg-card').innerHTML = '<div class="wg-empty">この月はまだ体重の記録がありません</div>';
+      return;
+    }
+    const diff = st.wLast - st.wFirst;
+    $('wg-card').innerHTML = weightChartSVG(st) +
+      '<div class="wg-sum">' +
+      '<div><div class="num">' + fmtW(st.wLast) + '</div><div class="lbl">さいきん</div></div>' +
+      '<div><div class="num">' + (st.weights.length > 1 ? signedPlain(diff) : '—') + '</div><div class="lbl">月のはじめから</div></div>' +
+      '<div><div class="num">' + fmtW(st.wMin) + '</div><div class="lbl">いちばん軽い</div></div>' +
+      '<div><div class="num">' + st.weights.length + '</div><div class="lbl">はかった日</div></div>' +
+      '</div>';
+  }
+  function signedPlain(d){
+    const v = Math.round(d * 10) / 10;
+    return (v > 0 ? '+' : v < 0 ? '−' : '±') + fmtW(Math.abs(v));
   }
 
   /* ---------- ぬり絵グリッド＋習慣べつの成績 ---------- */
@@ -983,6 +1237,12 @@
       });
       mc.appendChild(b);
     });
+    const dw = $('d-weight');
+    $('d-w-label').hidden = !weightOn();
+    dw.hidden = !weightOn();
+    if(document.activeElement !== dw){
+      dw.value = (r && validWeight(r.weight)) ? fmtW(r.weight) : '';
+    }
     if(document.activeElement !== $('d-note')) $('d-note').value = (r && r.note) || '';
     if(document.activeElement !== $('d-goal')) $('d-goal').value = (r && r.goal) || '';
     const dgr = $('d-goal-result');
@@ -1001,6 +1261,24 @@
     });
     if(document.activeElement !== $('d-goal-note')) $('d-goal-note').value = (r && r.goalNote) || '';
   }
+  $('d-weight').addEventListener('input', () => {
+    const el = $('d-weight');
+    const raw = el.value.replace(/[^\d.]/g, '');
+    if(raw !== el.value) el.value = raw;
+    const v = parseFloat(raw);
+    if(raw === '') setWeight(dayKey, null);
+    else if(validWeight(v)) setWeight(dayKey, v);
+    if(dayKey === todayKey()) renderToday();
+  });
+  $('d-weight').addEventListener('blur', () => {
+    const el = $('d-weight');
+    if(el.value !== '' && !validWeight(parseFloat(el.value))){
+      setWeight(dayKey, null);
+      toast('体重は 10〜400 の数字で入れてね');
+    }
+    renderDaySheet(); renderCal();
+  });
+
   $('d-note').addEventListener('input', () => {
     const rr = rec(dayKey, true);
     rr.note = $('d-note').value;
@@ -1026,6 +1304,20 @@
     return Math.floor((new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) - new Date(y,m-1,d)) / 86400000);
   }
 
+  /* ---------- 体重ON/OFF ---------- */
+  function renderWeightToggle(){
+    const t = $('w-toggle');
+    t.classList.toggle('on', weightOn());
+    t.setAttribute('aria-checked', weightOn() ? 'true' : 'false');
+  }
+  $('w-toggle').addEventListener('click', () => {
+    data.weightOn = !weightOn();
+    save();
+    renderWeightToggle(); renderToday();
+    if(!$('view-cal').hidden) renderCal();
+    toast(weightOn() ? '体重の記録をONにしました' : '体重の記録をOFFにしました（数字は消えません）');
+  });
+
   function renderBackupStatus(){
     const el = $('backup-status');
     if(!el) return;
@@ -1047,6 +1339,7 @@
 
   function renderSet(){
     renderBackupStatus();
+    renderWeightToggle();
     const list = $('set-list');
     list.innerHTML = '';
     data.habits.forEach((h,i) => {
@@ -1165,6 +1458,16 @@
       ['ハッピー平均', st.happyAvg === null ? '—' : HAPPYS[st.happyAvg]]
     ].map(s => '<div class="stat"><div class="sv">' + s[1] + '</div><div class="sl">' + s[0] + '</div></div>').join('');
 
+    const weightBlock = (weightOn() && st.weights.length)
+      ? '<h2>体重の推移</h2>\n<div class="card wcard">' + weightChartSVG(st) +
+        '<div class="wsum">' +
+        '<div><div class="sv">' + fmtW(st.wLast) + '</div><div class="sl">さいきん</div></div>' +
+        '<div><div class="sv">' + (st.weights.length > 1 ? signedPlain(st.wLast - st.wFirst) : '—') + '</div><div class="sl">月のはじめから</div></div>' +
+        '<div><div class="sv">' + fmtW(st.wMin) + '</div><div class="sl">いちばん軽い</div></div>' +
+        '<div><div class="sv">' + st.weights.length + '</div><div class="sl">はかった日</div></div>' +
+        '</div></div>\n'
+      : '';
+
     const habitRows = st.rows.length
       ? st.rows.map(r =>
           '<tr><td class="he">' + r.habit.emoji + '</td><td>' + esc(r.habit.name) + '</td>' +
@@ -1178,6 +1481,7 @@
           if(n.r.happy !== null && n.r.happy !== undefined) meta.push(HAPPYS[n.r.happy]);
           if(n.r.mood !== null && n.r.mood !== undefined) meta.push(MOODS[n.r.mood]);
           if(n.total > 0) meta.push('できた ' + n.done + '/' + n.total);
+          if(weightOn() && validWeight(n.r.weight)) meta.push(fmtW(n.r.weight) + 'kg');
           let body = '';
           if(n.r.note) body += '<div class="nt">' + esc(n.r.note) + '</div>';
           if(n.r.goal || (n.r.goalResult !== null && n.r.goalResult !== undefined) || n.r.goalNote){
@@ -1213,6 +1517,9 @@
 '.sl{font-size:11px;color:var(--sub);font-weight:600}\n' +
 '.card{background:var(--card);border-radius:20px;box-shadow:0 2px 10px rgba(80,100,160,.08)}\n' +
 '.scroll{overflow-x:auto;padding:16px 0}\n' +
+'.wcard{padding:16px 10px 6px}.wcard svg{display:block;width:100%;height:auto}\n' +
+'.wsum{display:flex;justify-content:space-around;text-align:center;border-top:1px solid var(--line);margin:12px 8px 0;padding:12px 4px 8px}\n' +
+'.wsum .sv{font-size:18px}\n' +
 '.hg{display:grid;gap:2px;width:max-content;min-width:100%;padding-right:16px;align-items:center;grid-template-columns:' + cols + '}\n' +
 '.hgn{position:sticky;left:0;background:var(--card);padding:0 10px 0 16px;font-size:11px;font-weight:700;white-space:nowrap;height:16px;display:flex;align-items:center;gap:5px}\n' +
 '.hgd{font-size:9px;color:var(--sub);text-align:center;font-weight:600;font-variant-numeric:tabular-nums}\n' +
@@ -1243,6 +1550,7 @@
 '<div class="eyebrow">ゆるログ</div>\n<h1>' + title + '</h1>\n' +
 '<div class="meta">書き出し日：' + todayKey() + '</div>\n' +
 '<div class="stats">' + stats + '</div>\n' +
+weightBlock +
 '<h2>ぬり絵（つづくほど、こくなる）</h2>\n' +
 '<div class="card"><div class="scroll"><div class="hg">' + grid + '</div></div>' +
 '<div class="legend"><span>うすい</span><i style="background:var(--g1)"></i><i style="background:var(--g2)"></i>' +
