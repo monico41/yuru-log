@@ -441,8 +441,16 @@
   .gcal-foot{ font-size:11px; color:var(--sub); text-align:right; margin-top:6px; }
 
   /* ---------- 目標 ---------- */
-  .goal-text{ font-size:16px; font-weight:700; margin:0 2px 12px; line-height:1.5; }
-  .goal-card .chip-row{ margin-bottom:12px; }
+  .goal-edit{ display:flex; align-items:center; gap:8px; }
+  .goal-icon{ font-size:19px; flex:none; }
+  .goal-input{
+    flex:1; min-width:0; border:none; outline:none; background:var(--bg);
+    border-radius:14px; padding:12px 16px; font-size:16px; font-weight:700;
+    color:var(--ink); font-family:inherit;
+  }
+  .goal-input::placeholder{ color:var(--sub); font-weight:600; font-size:14px; }
+  .goal-input:focus{ box-shadow:0 0 0 2px var(--accent); }
+  .goal-card .chip-row{ margin:14px 0 12px; }
   .goal-hint{ font-size:12px; color:var(--sub); margin:10px 4px 0; line-height:1.6; }
 
   /* ---------- 紙吹雪 ---------- */
@@ -475,13 +483,20 @@
       <div class="gcal-foot" id="gcal-foot"></div>
     </div>
 
-    <div class="section-label" id="goal-label" hidden>きょうの目標</div>
-    <div class="diary goal-card" id="goal-card" hidden>
-      <div class="goal-text" id="goal-text"></div>
-      <div class="chip-row" id="goal-result"></div>
-      <div class="note-row">
-        <input class="note" id="goal-note" maxlength="80" placeholder="ふりかえりを一言（なくてもOK）" autocomplete="off">
-        <span class="note-count" id="goal-note-count">0/80</span>
+    <div class="section-label" id="goal-label">きょうの目標</div>
+    <div class="diary goal-card" id="goal-card">
+      <div class="goal-edit">
+        <span class="goal-icon">🎯</span>
+        <input class="goal-input" id="goal-input" maxlength="40"
+               placeholder="きょうの自分にひとつだけ（例：早く寝る）" autocomplete="off">
+        <span class="note-count" id="goal-count">0/40</span>
+      </div>
+      <div id="goal-done" hidden>
+        <div class="chip-row" id="goal-result"></div>
+        <div class="note-row">
+          <input class="note" id="goal-note" maxlength="80" placeholder="ふりかえりを一言（なくてもOK）" autocomplete="off">
+          <span class="note-count" id="goal-note-count">0/80</span>
+        </div>
       </div>
     </div>
 
@@ -824,12 +839,13 @@
       mr.appendChild(b);
     });
 
-    // きょうの目標（前日に書いたもの）
-    const hasGoal = r && r.goal && r.goal.length;
-    $('goal-label').hidden = !hasGoal;
-    $('goal-card').hidden = !hasGoal;
+    // きょうの目標（前日に書いたものが入る。当日その場で書いてもOK）
+    const gi = $('goal-input');
+    if(document.activeElement !== gi){ gi.value = (r && r.goal) || ''; }
+    $('goal-count').textContent = gi.value.length + '/40';
+    const hasGoal = gi.value.trim().length > 0;
+    $('goal-done').hidden = !hasGoal;
     if(hasGoal){
-      $('goal-text').textContent = '🎯 ' + r.goal;
       const gr = $('goal-result');
       gr.innerHTML = '';
       GOALR.forEach((g,i) => {
@@ -1066,6 +1082,16 @@
     rr.note = $('note').value;
     $('note-count').textContent = rr.note.length + '/80';
     save();
+  });
+
+  $('goal-input').addEventListener('input', () => {
+    const rr = rec(todayKey(), true);
+    rr.goal = $('goal-input').value;
+    $('goal-count').textContent = rr.goal.length + '/40';
+    save();
+    // 目標が入った／空になった瞬間だけ、達成ボタンの出し分けを切りかえる
+    const has = rr.goal.trim().length > 0;
+    if($('goal-done').hidden === has) renderToday();
   });
 
   $('goal-note').addEventListener('input', () => {
