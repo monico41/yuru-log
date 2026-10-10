@@ -675,7 +675,7 @@
   const MOODS = ['☀️','🌤️','☁️','🌧️','⛈️'];
   const HAPPYS = ['😩','😕','😐','😊','🤩'];
   const EMOJIS = ['💧','🚶','🏃','📚','✍️','🧘','😴','🥗','💊','🦷','🧹','🌱','🎧','💪','🗣️','🎨','🤸','♟️','🇳🇿','🥛'];
-  const BURN_EMOJIS = ['🪜','💃','🕺','🚶','🏃','🚴','🏋️','🧘','🤸','🏊','🥊','⛹️','🛼','🥾','🧹','🎾'];
+  const BURN_EMOJIS = ['🪜','💃','🕺','🚶','🏃','🚴','🏋️','🧘','🤸','🏊','🥊','⛹️','🛼','🥾','🧹','🎾','✨','🔥'];
   const WDAYS = ['日','月','火','水','木','金','土'];
   const GOALR = ['💮 できた！','🙆 まあまあ','🌧️ できなかった'];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -724,6 +724,15 @@
       {id:uid(), emoji:'🪜', name:'ステッパー'},
       {id:uid(), emoji:'💃', name:'ダンス'},
     ];
+    save();
+  }
+
+  // 「その他（推定）」を1回だけ追加（2026-10-11 ユーザー依頼）
+  if(!data.burnOther1011){
+    if(!data.burns.some(b => b.name === 'その他（推定）')){
+      data.burns.push({id:uid(), emoji:'✨', name:'その他（推定）'});
+    }
+    data.burnOther1011 = true;
     save();
   }
   function uid(){ return 'h' + Math.random().toString(36).slice(2,9); }
